@@ -3,8 +3,8 @@
 **Materia:** Lenguajes y Autómatas II (SCD-1016)  
 **Tema:** Encuadre, Diagnóstico de Punteros y Metodología IA  
 **Docente Titular:** MCC. Iván Márquez Larios (`ijmarquezl`)  
-**Estudiante:** [Nombre Completo]  
-**Matrícula:** [No. de Control]  
+**Estudiante:** Jesus Manuel Rangel Aviles
+**Matrícula:** 24531356 
 **Track:** C
 
 ---
