@@ -4,6 +4,7 @@
 **Tema:** Encuadre, Diagnóstico de Punteros y Metodología IA  
 **Docente Titular:** MCC. Iván Márquez Larios (`ijmarquezl`)  
 **Estudiante:** Jesus Manuel Rangel Aviles
+
 **Matrícula:** 24531356 
 **Track:** C
 
