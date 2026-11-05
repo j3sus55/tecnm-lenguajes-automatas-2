@@ -1,0 +1,47 @@
+name: Lenguajito C11
+on:
+  push:
+    paths: ['proyecto_integrador/**', '.github/workflows/lenguajito.yml']
+  pull_request:
+    paths: ['proyecto_integrador/**', '.github/workflows/lenguajito.yml']
+permissions:
+  contents: read
+jobs:
+  compiler:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proyecto_integrador
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar C11 sin warnings
+        run: make
+      - name: Pruebas por hito y suite completa
+        run: |
+          make test-hito1
+          make test-hito2
+          make test-hito3
+          make test-hito4
+          make test
+          python3 pruebas_propias/run.py
+      - name: Generar y verificar ELF
+        run: |
+          mkdir -p entrega
+          ./lenguajito tests/validos/08_anidado.lj --asm > entrega/anidado.s
+          as --64 entrega/anidado.s -o entrega/anidado.o
+          gcc entrega/anidado.o -o entrega/anidado
+          file entrega/anidado
+          readelf -h entrega/anidado
+          entrega/anidado > entrega/anidado.out
+          diff tests/validos/08_anidado.out entrega/anidado.out
+          cp lenguajito entrega/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lenguajito-linux-x86-64
+          path: proyecto_integrador/entrega/
+      - name: Auditoria de memoria
+        run: |
+          make clean
+          make CFLAGS='-std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-pie -no-pie'
+          make test
+          python3 pruebas_propias/run.py
