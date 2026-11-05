@@ -4,12 +4,12 @@
 **Docente Titular:** MCC. Iván Márquez Larios (`ijmarquezl`)  
 **Estudiante:** [Nombre Completo]  
 **Matrícula:** [No. de Control]  
-**Track:** [ C | Rust ]  
+**Track:** C (el harness evalúa C; la versión en Rust es opcional y no se califica con este harness)  
 
 ---
 
 ## 1. Fase 1: El Artesano (Dificultad Manual)
-*Reto:* Manipulación de archivos y llamadas OS  
+*Reto:* Escritura y conteo de líneas en archivos  
 *Describe qué problema o restricción de memoria/sintaxis identificaste al codificar a mano:*
 > 
 
@@ -40,7 +40,13 @@
 ---
 
 ## 4. Fase 3: El Auditor (Resultados del Test Harness)
-*Pruebas ejecutadas:* Detección de errores de compilación GCC
+*Pruebas ejecutadas:* Archivo vacío, sin salto final y ruta inexistente
+
+### Salida del harness
+```text
+Pega aquí la salida de la celda del harness. Debe terminar con:
+RESULTADO: n/n pruebas superadas
+```
 
 * [ ] Caso base y límites superados sin *Crash*.
 * [ ] No existen accesos fuera de límites ni *Memory Leaks*.
