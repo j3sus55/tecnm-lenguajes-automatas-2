@@ -52,7 +52,8 @@ static void sequence(Context *c,Node *parent,int block) {
         size_t before=c->pos; int errors=c->errors;
         Node *s=statement(c);
         if(s) { *tail=s; tail=&s->next; }
-        if(c->errors>errors) {
+        if(c->errors>errors && !(c->pos>before &&
+           (!strcmp(c->tokens[c->pos-1].text,";") || !strcmp(c->tokens[c->pos-1].text,"}")))) {
             while(strcmp(peek(c).kind,"EOF")&&!at(c,";")&&!at(c,"}"))take(c);
             accept(c,";");
         }
