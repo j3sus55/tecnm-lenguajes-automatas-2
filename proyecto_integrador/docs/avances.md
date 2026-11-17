@@ -1,52 +1,20 @@
-# Avances del proyecto
+# Avances — registro honesto
+Equipo: Jesus Manuel Ramgel Aviles y Rafael Antonio Castillo Basto.
+Se preparó la implementación integrada el 2026-11-05.
+No hay evidencia en esta sesión de avances presentados previamente en clase.
+Los siguientes puntos sirven para exposición retrospectiva; no acreditan fechas
+históricas ni participaciones individuales.
 
-**Equipo:** [integrantes]  
-**Repositorio:** [URL del fork]  
-**Tag actual:** [v0.N-hitoN]
+| Sesión | Comando y capacidad actual | Falla o pendiente | Siguiente revisión |
+| --- | --- | --- | --- |
+| 05 | make; compilador modular C11 | Presentación original no acreditada | Revisar gramática y estructura |
+| 08 | ./lenguajito tests/hito1/01_expresion.lj --tokens | Defensa humana pendiente | Explicar posiciones y S01 |
+| 15 | ./lenguajito tests/validos/05_shadowing.lj --check | Defensa humana pendiente | Revisar tabla e inicialización |
+| 25 | ./lenguajito tests/validos/03_if.lj --tac | Defensa humana pendiente | Explicar etiquetas y temporales |
+| 35 | ./lenguajito tests/validos/01_suma.lj --asm | Defensa humana pendiente | Ensamblar y verificar ELF |
 
-Completa una sección antes de cada clase de avance. Tres bullets y el commit.
-
----
-
-## Avance 0 · Sesión 05 · Hito 0
-
-1. **Qué compila hoy** (comando exacto):
-2. **Qué falla y por qué**:
-3. **Qué sigue**:
-4. **Commit**:
-
----
-
-## Avance 1 · Sesión 08
-
-1. **Qué compila hoy** (comando exacto):
-2. **Qué falla y por qué**:
-3. **Qué sigue**:
-4. **Commit**:
-
----
-
-## Avance 2 · Sesión 15
-
-1. **Qué compila hoy** (comando exacto):
-2. **Qué falla y por qué**:
-3. **Qué sigue**:
-4. **Commit**:
-
----
-
-## Avance 3 · Sesión 25
-
-1. **Qué compila hoy** (comando exacto):
-2. **Qué falla y por qué**:
-3. **Qué sigue**:
-4. **Commit**:
-
----
-
-## Avance 4 · Sesión 35
-
-1. **Qué compila hoy** (comando exacto):
-2. **Qué falla y por qué**:
-3. **Qué sigue**:
-4. **Commit**:
+Commits reales:
+- 216225cb11db4e091ade3aa35fe72194cc8073ef: implementación integrada y CI.
+- 058a674ce940ec9ff71e375545306224c8aeb3e5: corrección de recuperación.
+Ver docs/validacion.md para resultados. El equipo debe agregar únicamente fechas,
+commits y observaciones que pueda respaldar.
