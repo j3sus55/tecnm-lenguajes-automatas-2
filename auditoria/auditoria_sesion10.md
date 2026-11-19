@@ -2,7 +2,7 @@
 **Materia:** Lenguajes y Autómatas II (SCD-1016)  
 **Tema:** Hito 1: Mini-Evaluador de Expresiones  
 **Docente Titular:** MCC. Iván Márquez Larios (`ijmarquezl`)  
-**Estudiante:** Jesus anuel Rangel Aviles  
+**Estudiante:** Jesus Manuel Rangel Aviles  
 **Matrícula:** 24531356
 **Track:** C (el harness evalúa C; la versión en Rust es opcional y no se califica con este harness)  
 
