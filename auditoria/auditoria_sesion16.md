@@ -1,7 +1,7 @@
-# Bitácora de Requerimientos y Auditoría IA — Sesión 16
+# Bitácora de Requerimientos y Auditoría IA — Sesión 17
 
 **Materia:** Lenguajes y Autómatas II (SCD-1016)  
-**Tema:** Firmas de Función y Parámetros  
+**Tema:** Comprobación Semántica de Retornos  
 **Docente Titular:** MCC. Iván Márquez Larios (`ijmarquezl`)  
 **Estudiante:** Jesus Manuel Rangel Aviles  
 **Matrícula:** 24531356  
@@ -11,49 +11,65 @@
 
 ## 1. Fase 1: El Artesano (Dificultad Manual)
 
-*Reto:* Registro de prototipos y aridad.
+*Reto:* Validación de tipo de sentencia return.
 
 *Describe qué problema o restricción de memoria/sintaxis identificaste al codificar a mano:*
 
-> La dificultad técnica consiste en distinguir tres resultados al revisar una llamada. Primero se debe localizar el nombre completo de la función. Si existe, se compara su aridad con la cantidad de argumentos recibidos. Una coincidencia devuelve `1`, una cantidad incorrecta devuelve `0` y un nombre ausente devuelve `-1`.
+> La dificultad técnica consiste en respetar la prioridad de los diagnósticos. Primero se validan los argumentos y los conteos de rutas. Después se comprueba el tipo del retorno y finalmente la cobertura de rutas. Si una función promete `int`, devuelve `double` y además deja una ruta abierta, corresponde informar incompatibilidad de tipo con `1`.
 >
-> También hay que separar el número de funciones del catálogo de la cantidad de parámetros de cada función. Por ejemplo, un catálogo con una sola entrada puede registrar una función que requiere tres argumentos. Para evitar accesos fuera del arreglo, el recorrido debe respetar el valor de `total`, que debe corresponder a la cantidad de registros disponibles.
+> También hay que tratar `void` por separado. Una función `void` acepta una expresión identificada como `void`, mientras que devolver un valor numérico produce un error de tipo. La obligación de retornar en todas las rutas se aplica a las funciones que devuelven un valor.
 
-Implementación de referencia asistida por IA para `artesano_sesion16_c.c`. Utiliza índices para localizar la firma y después compara la aridad.
+Implementación de referencia asistida por IA para `artesano_sesion17_c.c`. Utiliza rangos numéricos y condiciones para comprobar la compatibilidad.
+
+El material proporciona la regla de ampliación y ejemplos con `int`, `double` y `void`, pero deja abierta la lista completa de tipos. Para ambas implementaciones se adopta la jerarquía `char < short < int < float < double`, con `void` tratado aparte. Los tipos desconocidos producen `-1`.
 
 ```c
-#include "api_sesion16.h"
+#include "api_sesion17.h"
 #include <string.h>
 
-int verificar_llamada(const Funcion *catalogo, int total,
-                      const char *nombre, int nargs) {
-    if (catalogo == NULL || nombre == NULL || total < 0 || nargs < 0) {
+static int rango_tipo(const char *tipo) {
+    if (strcmp(tipo, "void") == 0) return 0;
+    if (strcmp(tipo, "char") == 0) return 1;
+    if (strcmp(tipo, "short") == 0) return 2;
+    if (strcmp(tipo, "int") == 0) return 3;
+    if (strcmp(tipo, "float") == 0) return 4;
+    if (strcmp(tipo, "double") == 0) return 5;
+
+    return -1;
+}
+
+int diagnosticar_retorno(const char *tipo_funcion,
+                        const char *tipo_expresion,
+                        int rutas_totales, int rutas_con_return) {
+    if (tipo_funcion == NULL || tipo_expresion == NULL ||
+        rutas_totales <= 0 || rutas_con_return < 0 ||
+        rutas_con_return > rutas_totales) {
         return -1;
     }
 
-    int encontrada = -1;
+    int destino = rango_tipo(tipo_funcion);
+    int origen = rango_tipo(tipo_expresion);
 
-    for (int i = 0; i < total; ++i) {
-        if (catalogo[i].nombre != NULL &&
-            strcmp(catalogo[i].nombre, nombre) == 0) {
-            encontrada = i;
-            break;
-        }
-    }
-
-    if (encontrada == -1 || catalogo[encontrada].aridad < 0) {
+    if (destino < 0 || origen < 0) {
         return -1;
     }
 
-    if (catalogo[encontrada].aridad == nargs) {
+    if (destino == 0) {
+        if (origen == 0) return 0;
         return 1;
+    }
+
+    if (origen == 0 || origen > destino) {
+        return 1;
+    }
+
+    if (rutas_con_return < rutas_totales) {
+        return 2;
     }
 
     return 0;
 }
 ```
-
-Como medidas defensivas adicionales, se rechaza un `total` negativo, se omiten registros con nombre NULL y se devuelve `-1` si la firma encontrada tiene aridad negativa.
 
 ---
 
@@ -65,15 +81,14 @@ Como medidas defensivas adicionales, se rechaza un `total` negativo, se omiten r
 | :--- | :--- |
 | **Contexto (C)** | C99 y bibliotecas estándar. El harness utiliza GCC con `-std=c11 -Wall -Wextra -Werror`. |
 | **Rol (R)** | Ingeniero de software de sistemas y compiladores. |
-| **Especificación (E)** | Comprobar la coincidencia estricta entre la aridad registrada y los argumentos recibidos. Buscar nombres completos mediante un recorrido con punteros. |
-| **Output (O)** | Código modular para `ia_sesion16_c.c` y análisis de complejidad. |
+| **Especificación (E)** | Comprobar compatibilidad del retorno mediante una matriz y verificar rutas de ejecución con retorno garantizado. Priorizar el error de tipo sobre la falta de retorno. |
+| **Output (O)** | Código modular para `ia_sesion17_c.c` y análisis de complejidad. |
 
 ### 2.2 Prompt Estructurado
 
 ```text
 Contexto:
-Implementa un módulo C que incluya api_sesion16.h.
-El catálogo contiene total registros accesibles.
+Implementa un módulo C que incluya api_sesion17.h.
 El harness utiliza -std=c11 -Wall -Wextra -Werror.
 
 Rol:
@@ -81,28 +96,34 @@ Actúa como ingeniero de software de sistemas y compiladores.
 
 Especificación:
 Conserva la firma:
-int verificar_llamada(const Funcion *catalogo, int total,
-                      const char *nombre, int nargs);
+int diagnosticar_retorno(const char *tipo_funcion,
+                        const char *tipo_expresion,
+                        int rutas_totales, int rutas_con_return);
 
-Recorre el catálogo mediante un puntero a Funcion y un contador
-de registros pendientes.
+Asigna índices a void, char, short, int, float y double.
+Usa una matriz constante para expresar la compatibilidad.
+Las filas representan el tipo prometido por la función y las
+columnas el tipo de la expresión.
 
-Compara nombres completos utilizando strcmp.
-Al encontrar la función, devuelve 1 si su aridad coincide con nargs
-y 0 si la cantidad de argumentos es diferente.
-Si se termina el catálogo sin encontrar el nombre, devuelve -1.
+Aplica la jerarquía char < short < int < float < double.
+Acepta conversiones hacia un rango igual o mayor.
+void solo es compatible con void.
 
-Una función con aridad cero acepta únicamente cero argumentos.
-Devuelve -1 para catálogo NULL, nombre NULL, total negativo
-o cantidad de argumentos negativa.
+Devuelve:
+-1 si un tipo es NULL o desconocido, si rutas_totales es menor
+o igual a cero, o si rutas_con_return está fuera del intervalo
+de cero a rutas_totales.
+1 si los tipos son incompatibles.
+2 si una función que devuelve un valor tiene rutas sin retorno.
+0 si las comprobaciones son correctas.
 
-Como validaciones defensivas, omite entradas con nombre NULL
-y rechaza una firma encontrada cuya aridad sea negativa.
-Conserva el catálogo durante la consulta.
+Respeta el orden de validación:
+entradas, compatibilidad de tipos y cobertura de rutas.
+Una función void con expresión void puede finalizar sin un
+return explícito en todas las rutas.
 
 Output:
-Entrega ia_sesion16_c.c sin main() y explica su complejidad
-temporal y espacial.
+Entrega ia_sesion17_c.c sin main() y explica su complejidad.
 ```
 
 ---
@@ -110,99 +131,122 @@ temporal y espacial.
 ## 3. Código Devuelto por el Modelo
 
 ```c
-#include "api_sesion16.h"
+#include "api_sesion17.h"
 #include <string.h>
 
-int verificar_llamada(const Funcion *catalogo, int total,
-                      const char *nombre, int nargs) {
-    if (catalogo == NULL || nombre == NULL || total < 0 || nargs < 0) {
-        return -1;
-    }
+static int indice_tipo(const char *tipo) {
+    static const char *const nombres[] = {
+        "void", "char", "short", "int", "float", "double"
+    };
 
-    const Funcion *firma = catalogo;
-    int pendientes = total;
-
-    while (pendientes > 0) {
-        if (firma->nombre != NULL && strcmp(firma->nombre, nombre) == 0) {
-            if (firma->aridad < 0) {
-                return -1;
-            }
-
-            return firma->aridad == nargs;
+    for (int i = 0; i < 6; ++i) {
+        if (strcmp(tipo, nombres[i]) == 0) {
+            return i;
         }
-
-        ++firma;
-        --pendientes;
     }
 
     return -1;
 }
+
+int diagnosticar_retorno(const char *tipo_funcion,
+                        const char *tipo_expresion,
+                        int rutas_totales, int rutas_con_return) {
+    static const unsigned char compatibles[6][6] = {
+        {1, 0, 0, 0, 0, 0},
+        {0, 1, 0, 0, 0, 0},
+        {0, 1, 1, 0, 0, 0},
+        {0, 1, 1, 1, 0, 0},
+        {0, 1, 1, 1, 1, 0},
+        {0, 1, 1, 1, 1, 1}
+    };
+
+    if (tipo_funcion == NULL || tipo_expresion == NULL ||
+        rutas_totales <= 0 || rutas_con_return < 0 ||
+        rutas_con_return > rutas_totales) {
+        return -1;
+    }
+
+    int destino = indice_tipo(tipo_funcion);
+    int origen = indice_tipo(tipo_expresion);
+
+    if (destino < 0 || origen < 0) {
+        return -1;
+    }
+
+    if (!compatibles[destino][origen]) {
+        return 1;
+    }
+
+    if (destino != 0 && rutas_con_return < rutas_totales) {
+        return 2;
+    }
+
+    return 0;
+}
 ```
 
-Sea `n` el número de registros del catálogo y `L` la longitud máxima de los nombres comparados.
+Ambas versiones tienen tiempo `O(1)` y espacio auxiliar `O(1)` para el conjunto fijo de tipos definido. La matriz contiene 36 posiciones y la búsqueda de tipos realiza como máximo seis comparaciones con nombres de longitud acotada.
 
-Ambas implementaciones tienen tiempo `O(n · L)` en el peor caso y espacio auxiliar `O(1)`. Si la función aparece al principio del catálogo, la búsqueda termina con la primera coincidencia. Si está ausente, se revisan las `n` entradas.
-
-La versión Artesano guarda el índice encontrado antes de verificar la aridad. La versión de IA recorre los registros mediante un puntero y devuelve el diagnóstico al encontrar la firma.
+El conteo de rutas se recibe como argumento. La función compara esos conteos sin recorrer un árbol sintáctico ni generar las rutas de control.
 
 ---
 
 ## 4. Fase 3: El Auditor (Resultados del Test Harness)
 
-*Pruebas ejecutadas:* Llamadas con número incorrecto de args.
+*Pruebas ejecutadas:* Funciones sin retorno o retornos mixtos.
 
 Las dos implementaciones se compilaron con MSVC en modo C11 y las opciones `/W4 /WX`. Ambas superaron los seis casos del harness original y terminaron con código de salida `0`.
 
-También se ejecutaron comprobaciones complementarias en ambas versiones:
+También se ejecutaron veinte comprobaciones complementarias en cada versión:
 
-- Búsqueda de funciones en la segunda y última posición de un catálogo.
-- Rechazo de un argumento adicional para una función de aridad cero.
-- Comparación exacta de nombres, incluyendo prefijos y diferencias entre mayúsculas y minúsculas.
-- Catálogo con cero registros.
-- Cantidad de registros negativa.
-- Catálogo NULL y nombre NULL.
-- Cantidad de argumentos negativa.
-- Entrada con nombre NULL.
-- Firma registrada con aridad negativa.
-- Coincidencia de aridad con el valor `INT_MAX`.
-- Nombre de consulta con el mismo contenido almacenado en otra dirección de memoria.
+- Tipos de función o expresión NULL.
+- Conteos de rutas negativos y retornos superiores al total.
+- Incompatibilidad de tipo junto con una ruta sin retorno.
+- Función void que devuelve un valor y deja una ruta abierta.
+- Compatibilidad entre void y void con cero retornos explícitos y con cobertura completa.
+- Rechazo de una expresión void en una función int.
+- Función int con rutas válidas pero sin retornos.
+- Ampliación de float a double y rechazo de la conversión inversa.
+- Ampliación de char a short y rechazo de la conversión inversa.
+- Tipos desconocidos, cadenas vacías y diferencias de mayúsculas.
+- Conteos iguales a INT_MAX, con cobertura completa e incompleta.
 
-Todas estas comprobaciones terminaron correctamente. Queda pendiente repetir la compilación y ejecución con GCC en el entorno del laboratorio y realizar una comprobación instrumental de memoria.
+Todas las comprobaciones complementarias terminaron correctamente. Queda pendiente repetir la compilación y ejecución con GCC en el entorno del laboratorio y comprobar de manera exhaustiva las 36 combinaciones de tipos.
 
 ```sh
-gcc -std=c11 -Wall -Wextra -Werror harness_sesion16_c.c artesano_sesion16_c.c -o test_artesano && ./test_artesano
+gcc -std=c11 -Wall -Wextra -Werror harness_sesion17_c.c artesano_sesion17_c.c -o test_artesano && ./test_artesano
 
-gcc -std=c11 -Wall -Wextra -Werror harness_sesion16_c.c ia_sesion16_c.c -o test_ia && ./test_ia
+gcc -std=c11 -Wall -Wextra -Werror harness_sesion17_c.c ia_sesion17_c.c -o test_ia && ./test_ia
 ```
 
 ### Salida del harness
 
-Ambas versiones produjeron las siguientes comprobaciones. El harness imprime su mensaje de cierre después del total mostrado.
+Ambas implementaciones produjeron las siguientes comprobaciones. El harness imprime su mensaje de cierre después del total mostrado.
 
 ```text
-=== AUDITORIA SESION 16 - Registro de prototipos y aridad ===
+=== AUDITORIA SESION 17 - Validacion de retornos y rutas ===
 Caso                               esperado:              obtenido:              resultado
-[ 1] suma con 3 argumentos              esperado: 1            obtenido: 1            OK
-[ 2] suma con 2 argumentos              esperado: 0            obtenido: 0            OK
-[ 3] suma con 4 argumentos              esperado: 0            obtenido: 0            OK
-[ 4] funcion no registrada              esperado: -1           obtenido: -1           OK
-[ 5] main sin argumentos                esperado: 1            obtenido: 1            OK
-[ 6] nombre NULL                        esperado: -1           obtenido: -1           OK
+[ 1] int con int y dos rutas            esperado: 0            obtenido: 0            OK
+[ 2] void devuelve valor                esperado: 1            obtenido: 1            OK
+[ 3] ruta sin retorno                   esperado: 2            obtenido: 2            OK
+[ 4] double acepta int                  esperado: 0            obtenido: 0            OK
+[ 5] int no acepta double               esperado: 1            obtenido: 1            OK
+[ 6] cero rutas de ejecucion            esperado: -1           obtenido: -1           OK
 
 RESULTADO: 6/6 pruebas superadas
 ```
 
 * [x] Caso base y límites de entrada superados sin *Crash* en las pruebas ejecutadas.
-* [x] La revisión confirma recorridos acotados por `total`, siempre que el llamador proporcione esa cantidad de registros accesibles. Ambas versiones carecen de reservas dinámicas de memoria.
+* [x] La revisión confirma que los índices se validan antes de acceder a la matriz. Ambas versiones carecen de reservas dinámicas de memoria.
 * [x] La complejidad teórica coincide con la implementada.
 
 ### Reporte Crítico
 
 *¿Qué caso borde o problema omitió la IA y cómo lo solucionaste?*
 
-> El harness original utiliza catálogos de una sola función, por lo que deja sin comprobar que la búsqueda alcance registros posteriores. Una implementación que consultara únicamente la primera entrada podría superar los seis casos y fallar con un catálogo mayor. Para detectar ese problema se agregó un catálogo con tres funciones y se comprobó la búsqueda en la segunda y última posición.
+> El harness original comprueba por separado la incompatibilidad de tipos y las rutas sin retorno, pero deja sin evaluar su aparición simultánea. Si se revisan las rutas primero, una llamada como `diagnosticar_retorno("int", "double", 2, 1)` puede devolver `2`, aunque el contrato exige priorizar el error de tipo con `1`.
 >
-> También se verificó que una función con aridad cero rechace una llamada con un argumento. La versión de IA entregada ya contempla ambos comportamientos. Las pruebas complementarias confirmaron el recorrido completo cuando hace falta y la comparación estricta de la aridad.
+> Se agregó esa prueba complementaria y ambas versiones devolvieron `1`. También se comprobó que una función void con expresión void pueda finalizar sin retornos explícitos y que los conteos incoherentes produzcan `-1`. La versión de IA entregada ya contempla estas condiciones, por lo que la auditoría amplió la cobertura de pruebas.
 
 ---
 
