@@ -1,0 +1,21 @@
+name: Lenguajito Jesus - Hitos 1 y 2
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lenguajito-jesus
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar Lenguajito
+        run: make
+      - name: Probar hito 1
+        run: make test-hito1
+      - name: Probar hito 2
+        run: make test-hito2
