@@ -1,4 +1,4 @@
-# Lenguajito — compilador C11
+# Lenguajito Jesus — compilador C11
 Equipo: **Jesus Manuel Rangel Aviles** y **Rafael Antonio Castillo Basto**.
 Curso: Lenguajes y Autómatas II, TecNM Cancún.
 
@@ -8,7 +8,7 @@ Puede ejecutarse en Google Colab o WSL. En Windows nativo el backend emite
 ensamblador ELF, pero `--run` requiere Linux.
 
 ```bash
-cd proyecto_integrador
+cd lenguajito-jesus
 make
 make test
 python3 pruebas_propias/run.py
@@ -18,7 +18,7 @@ python3 pruebas_propias/run.py
 En Colab, clona el fork y selecciona la rama de implementación:
 ```python
 !git clone --branch codex/lenguajito-integrador https://github.com/j3sus55/tecnm-lenguajes-automatas-2.git
-%cd tecnm-lenguajes-automatas-2/proyecto_integrador
+%cd tecnm-lenguajes-automatas-2/lenguajito-jesus
 !make
 !make test
 !python3 pruebas_propias/run.py
