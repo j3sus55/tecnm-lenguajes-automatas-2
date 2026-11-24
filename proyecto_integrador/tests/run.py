@@ -105,10 +105,13 @@ def revisar_asm(errores: list[str]) -> int:
         if r.returncode != 0:
             errores.append(f"{prog.name}: --asm terminó con {r.returncode}")
             continue
+        problemas = []
         if ".globl" not in r.stdout:
-            errores.append(f"{prog.name}: el ensamblador no declara .globl")
+            problemas.append("el ensamblador no declara .globl")
         if not re.search(r"\bret\b", r.stdout):
-            errores.append(f"{prog.name}: el ensamblador no termina con ret")
+            problemas.append("el ensamblador no termina con ret")
+        if problemas:
+            errores.append(f"{prog.name}: {', '.join(problemas)}")
     return total
 
 
