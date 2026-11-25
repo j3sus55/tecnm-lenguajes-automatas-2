@@ -1,7 +1,7 @@
-# Bitácora de Requerimientos y Auditoría IA — Sesión 23
+# Bitácora de Requerimientos y Auditoría IA — Sesión 22
 
 **Materia:** Lenguajes y Autómatas II (SCD-1016)  
-**Tema:** Etiquetas y Saltos Incondicionales  
+**Tema:** Generación de TAC para Expresiones  
 **Docente Titular:** MCC. Iván Márquez Larios (`ijmarquezl`)  
 **Estudiante:** Jesus Manuel Rangel Aviles  
 **Matrícula:** 24531356  
@@ -11,52 +11,88 @@
 
 ## 1. Fase 1: El Artesano (Dificultad Manual)
 
-*Reto:* Generador de etiquetas e instrucciones goto  
+*Reto:* Traductor de nodos AST a TAC  
 *Describe qué problema o restricción de memoria/sintaxis identificaste al codificar a mano:*
 
-> La dificultad técnica consiste en utilizar el valor actual del contador antes de incrementarlo para producir etiquetas consecutivas. También hay que distinguir entre la instrucción `GOTO L2` y la marca `L2:`, conservando el mismo nombre de destino.
+> La dificultad técnica consiste en conservar los resultados de ambos hijos antes de emitir la instrucción del operador. Para `a + b * c`, primero debe generarse `_t0 = b * c` y después `_t1 = a + _t0`. El recorrido en postorden conserva la agrupación representada en el árbol.
 >
-> La restricción de memoria principal es reservar espacio para el terminador nulo dentro de la capacidad del buffer. Además, una etiqueta NULL debe producir una cadena vacía y el modo de salto debe aceptar cualquier valor distinto de cero, incluyendo valores negativos.
+> También hay que evitar que dos resultados apunten a un mismo buffer temporal reutilizado. El Pool proporcionado conserva cada nombre generado en una posición diferente. Antes de emitir se comprueban la capacidad de líneas y las 64 posiciones disponibles en ese Pool.
 
-Implementación de referencia asistida por IA para `artesano_sesion23_c.c`. Utiliza `snprintf` para generar las etiquetas y formatear el flujo.
+Implementación de referencia asistida por IA para `artesano_sesion22_c.c`. Utiliza recursión para traducir primero el hijo izquierdo, después el derecho y finalmente el operador.
 
-Para los casos que el laboratorio deja sin definir, ambas versiones adoptan las siguientes decisiones. Un destino NULL o una capacidad no positiva producen una salida inmediata y conservan el contador. Un contador NULL, negativo o igual a `INT_MAX` deja una cadena vacía en un destino válido. El límite superior se rechaza para evitar desbordar el incremento.
+El contrato deja sin especificar el diagnóstico de entradas inválidas o capacidad insuficiente. Ambas versiones adoptan `-1` para esos casos y pueden conservar un prefijo de instrucciones ya emitidas. El llamador debe descartar esa salida si recibe `-1`.
 
-Cuando el buffer es insuficiente se conserva un prefijo terminado en nulo y el contador válido se incrementa. La unicidad de las etiquetas completas requiere capacidad suficiente y conservar el mismo contador durante la secuencia.
-
-El llamador debe proporcionar al menos `cap` bytes accesibles. La etiqueta de entrada y el contador deben ocupar almacenamiento independiente del destino.
+Se utiliza el Pool original, con capacidad para 64 operadores por traducción. Cada llamada reinicia los temporales desde `_t0`. Se reciben árboles binarios válidos con hojas de tipo `'H'`, operadores de tipo `'B'` y almacenamiento de salida independiente del AST. Los nombres de las hojas deben terminar en nulo dentro de `valor[16]`.
 
 ```c
-#include "api_sesion23.h"
-#include <limits.h>
+#include "api_sesion22.h"
 #include <stdio.h>
+#include <string.h>
 
-void nueva_etiqueta(char *dst, int cap, int *contador) {
-    if (dst == NULL || cap <= 0) return;
+typedef struct {
+    char nombre[64][16];
+    int usados;
+} Pool;
 
-    dst[0] = '\0';
+const char *nuevo_temporal(Pool *p, int *contador) {
+    if (p->usados >= 64) return "_t?";
 
-    if (contador == NULL || *contador < 0 || *contador == INT_MAX) {
-        return;
-    }
+    snprintf(p->nombre[p->usados], sizeof p->nombre[0],
+             "_t%d", (*contador)++);
 
-    snprintf(dst, (size_t)cap, "L%d", *contador);
-
-    ++*contador;
+    return p->nombre[p->usados++];
 }
 
-void emitir_flujo(char *dst, int cap, const char *etiqueta, int es_salto) {
-    if (dst == NULL || cap <= 0) return;
+static const char *traducir(const Nodo *n, char lineas[][64], int max,
+                            Pool *pool, int *contador, int *usadas,
+                            int profundidad) {
+    if (n == NULL || profundidad > 64) return NULL;
 
-    dst[0] = '\0';
+    if (n->tipo == 'H') {
+        if (memchr(n->valor, '\0', sizeof n->valor) == NULL) {
+            return NULL;
+        }
 
-    if (etiqueta == NULL) return;
-
-    if (es_salto != 0) {
-        snprintf(dst, (size_t)cap, "GOTO %s", etiqueta);
-    } else {
-        snprintf(dst, (size_t)cap, "%s:", etiqueta);
+        return n->valor;
     }
+
+    if (n->tipo != 'B' || n->op == '\0') return NULL;
+
+    const char *izq = traducir(n->izq, lineas, max, pool, contador,
+                               usadas, profundidad + 1);
+
+    if (izq == NULL) return NULL;
+
+    const char *der = traducir(n->der, lineas, max, pool, contador,
+                               usadas, profundidad + 1);
+
+    if (der == NULL || *usadas >= max || pool->usados >= 64) {
+        return NULL;
+    }
+
+    const char *temporal = nuevo_temporal(pool, contador);
+
+    snprintf(lineas[*usadas], 64, "%s = %s %c %s",
+             temporal, izq, n->op, der);
+
+    ++*usadas;
+
+    return temporal;
+}
+
+int generar_tac(const Nodo *raiz, char lineas[][64], int max) {
+    if (raiz == NULL || lineas == NULL || max < 0) return -1;
+
+    Pool pool = {{{0}}, 0};
+    int contador = 0;
+    int usadas = 0;
+
+    if (traducir(raiz, lineas, max, &pool, &contador,
+                 &usadas, 0) == NULL) {
+        return -1;
+    }
+
+    return usadas;
 }
 ```
 
@@ -70,49 +106,50 @@ void emitir_flujo(char *dst, int cap, const char *etiqueta, int es_salto) {
 | :--- | :--- |
 | **Contexto (C)** | C99 y bibliotecas estándar. El harness utiliza GCC con `-std=c11 -Wall -Wextra -Werror`. |
 | **Rol (R)** | Ingeniero de software de sistemas y compiladores. |
-| **Especificación (E)** | Trazabilidad del flujo de control. Generar etiquetas consecutivas y construir instrucciones GOTO o marcas mediante conversión decimal manual y copia acotada. |
+| **Especificación (E)** | Conservación de precedencia de operadores mediante postorden. Implementar el recorrido con una pila explícita y emitir una línea por operador utilizando `nuevo_temporal`. |
 | **Output (O)** | Solo código modular y análisis de complejidad. |
 
 ### 2.2 Prompt Estructurado
 
 ```text
 Contexto:
-Implementa un módulo C que incluya api_sesion23.h.
+Implementa un módulo C que incluya api_sesion22.h.
 El harness utiliza -std=c11 -Wall -Wextra -Werror.
-El destino tiene al menos cap bytes accesibles.
-Las entradas y el contador son independientes del almacenamiento de dst.
+El AST contiene hojas H y operadores binarios B.
+El arreglo de salida tiene max filas de 64 bytes y es independiente
+del almacenamiento del AST.
 
 Rol:
 Actúa como ingeniero de software de sistemas y compiladores.
 
 Especificación:
-Conserva las firmas:
-void nueva_etiqueta(char *dst, int cap, int *contador);
-void emitir_flujo(char *dst, int cap, const char *etiqueta, int es_salto);
+Conserva la firma:
+int generar_tac(const Nodo *raiz, char lineas[][64], int max);
 
-Implementa una función auxiliar de copia acotada que conserve
-una posición para el terminador nulo.
+Incluye sin modificaciones el Pool y nuevo_temporal del laboratorio.
+Usa una pila explícita para simular el postorden.
+Cada marco debe conservar el nodo, su etapa de procesamiento
+y el resultado del hijo izquierdo.
 
-En nueva_etiqueta, convierte manualmente el contador a decimal
-mediante divisiones y residuos. Escribe L seguido de los dígitos
-del valor actual y después incrementa el contador.
+Procesa primero el hijo izquierdo, después el derecho y finalmente
+emite "_tX = izquierdo operador derecho".
+Solicita cada temporal mediante nuevo_temporal.
+Las hojas devuelven su valor y generan cero líneas.
+Devuelve el número de instrucciones emitidas.
 
-En emitir_flujo:
-Si es_salto es distinto de cero, escribe "GOTO etiqueta".
-Si es_salto es cero, escribe "etiqueta:".
-Si etiqueta es NULL, produce una cadena vacía.
-Conserva las etiquetas vacías como cadenas válidas.
+Respeta max y termina cada línea dentro de sus 64 bytes.
+Reinicia los temporales en cada llamada.
+Comprueba el límite de 64 temporales antes de solicitar uno.
+Una pila de 65 marcos cubre los árboles admitidos por ese Pool.
 
-Si dst es NULL o cap no es positivo, termina sin escribir.
-Si el contador es NULL, negativo o INT_MAX, deja una cadena vacía
-en un destino válido y conserva el contador.
-
-Cuando el buffer sea insuficiente, escribe un prefijo terminado
-en nulo e incrementa el contador válido.
-Utiliza almacenamiento automático local y evita reservas dinámicas.
+Como decisiones defensivas, devuelve -1 para entradas inválidas,
+hijos ausentes, hojas sin terminador nulo o capacidad insuficiente.
+Puede quedar un prefijo de líneas emitidas cuando ocurre un error.
+Acepta una hoja con max cero porque no necesita instrucciones.
 
 Output:
-Entrega ia_sesion23_c.c sin main() y explica su complejidad.
+Entrega ia_sesion22_c.c sin main() y explica su complejidad
+temporal y espacial.
 ```
 
 ---
@@ -120,123 +157,156 @@ Entrega ia_sesion23_c.c sin main() y explica su complejidad.
 ## 3. Código Devuelto por el Modelo
 
 ```c
-#include "api_sesion23.h"
-#include <limits.h>
-#include <stddef.h>
+#include "api_sesion22.h"
+#include <stdio.h>
+#include <string.h>
 
-static void agregar(char *dst, int cap, int *usados, const char *texto) {
-    while (*texto != '\0' && *usados < cap - 1) {
-        dst[*usados] = *texto;
-        ++*usados;
-        ++texto;
-    }
+typedef struct {
+    char nombre[64][16];
+    int usados;
+} Pool;
 
-    dst[*usados] = '\0';
+const char *nuevo_temporal(Pool *p, int *contador) {
+    if (p->usados >= 64) return "_t?";
+
+    snprintf(p->nombre[p->usados], sizeof p->nombre[0],
+             "_t%d", (*contador)++);
+
+    return p->nombre[p->usados++];
 }
 
-void nueva_etiqueta(char *dst, int cap, int *contador) {
-    if (dst == NULL || cap <= 0) return;
+typedef struct {
+    const Nodo *nodo;
+    int etapa;
+    const char *izquierdo;
+} Marco;
 
-    dst[0] = '\0';
+int generar_tac(const Nodo *raiz, char lineas[][64], int max) {
+    if (raiz == NULL || lineas == NULL || max < 0) return -1;
 
-    if (contador == NULL || *contador < 0 || *contador == INT_MAX) {
-        return;
+    Marco pila[65];
+    int cima = 0;
+
+    pila[0] = (Marco){raiz, 0, NULL};
+
+    Pool pool = {{{0}}, 0};
+    int contador = 0;
+    int usadas = 0;
+    const char *resultado = NULL;
+
+    while (cima >= 0) {
+        Marco *m = &pila[cima];
+        const Nodo *n = m->nodo;
+
+        if (n == NULL) return -1;
+
+        if (n->tipo == 'H') {
+            if (memchr(n->valor, '\0', sizeof n->valor) == NULL) {
+                return -1;
+            }
+
+            resultado = n->valor;
+            --cima;
+        } else if (n->tipo != 'B' || n->op == '\0') {
+            return -1;
+        } else if (m->etapa < 2) {
+            const Nodo *hijo;
+
+            if (m->etapa == 0) {
+                hijo = n->izq;
+                m->etapa = 1;
+            } else {
+                m->izquierdo = resultado;
+                hijo = n->der;
+                m->etapa = 2;
+            }
+
+            if (cima == 64) return -1;
+
+            ++cima;
+            pila[cima] = (Marco){hijo, 0, NULL};
+        } else {
+            if (usadas >= max || pool.usados >= 64) return -1;
+
+            const char *temporal = nuevo_temporal(&pool, &contador);
+
+            snprintf(lineas[usadas], 64, "%s = %s %c %s",
+                     temporal, m->izquierdo, n->op, resultado);
+
+            ++usadas;
+            resultado = temporal;
+            --cima;
+        }
     }
 
-    char digitos[sizeof(int) * CHAR_BIT + 1];
-    unsigned int valor = (unsigned int)*contador;
-    int cantidad = 0;
-
-    do {
-        digitos[cantidad++] = (char)('0' + valor % 10);
-        valor /= 10;
-    } while (valor != 0);
-
-    int usados = 0;
-
-    agregar(dst, cap, &usados, "L");
-
-    while (cantidad > 0) {
-        char caracter[2] = {digitos[--cantidad], '\0'};
-        agregar(dst, cap, &usados, caracter);
-    }
-
-    ++*contador;
-}
-
-void emitir_flujo(char *dst, int cap, const char *etiqueta, int es_salto) {
-    if (dst == NULL || cap <= 0) return;
-
-    dst[0] = '\0';
-
-    if (etiqueta == NULL) return;
-
-    int usados = 0;
-
-    if (es_salto != 0) {
-        agregar(dst, cap, &usados, "GOTO ");
-    }
-
-    agregar(dst, cap, &usados, etiqueta);
-
-    if (es_salto == 0) {
-        agregar(dst, cap, &usados, ":");
-    }
+    return usadas;
 }
 ```
 
-Sea `d` la cantidad de dígitos del contador y `L` la longitud de la salida completa.
+Sea `n` la cantidad de nodos y `h` la altura del árbol.
 
-`nueva_etiqueta` tiene tiempo `O(d)` en ambas implementaciones. Para una plataforma con int de tamaño fijo, la cantidad máxima de dígitos está acotada.
+Ambas implementaciones tienen tiempo `O(n)` para los árboles admitidos. Cada nodo se procesa un número constante de veces, y las hojas y temporales tienen longitudes acotadas.
 
-`emitir_flujo` tiene tiempo `O(L)` en Artesano, considerando el procesamiento de la cadena mediante `snprintf`. La versión de IA realiza copia acotada, con tiempo `O(min(L, cap))`.
+Artesano utiliza espacio de llamadas `O(h)` más el Pool fijo. La versión de IA reserva una pila fija de 65 marcos y el Pool de 64 temporales, por lo que su espacio auxiliar reservado es `O(1)` con estos límites. Si las capacidades se generalizaran, el almacenamiento del recorrido dependería de la altura y el Pool de la cantidad de operadores.
 
-Ambas versiones utilizan espacio auxiliar `O(1)` para los tipos de la plataforma. El arreglo local de dígitos tiene un tamaño fijo suficiente para representar el contador.
+Las hojas no emiten instrucciones y cada operador válido emite exactamente una. Los punteros a temporales se utilizan mientras el Pool local permanece vigente.
 
 ---
 
 ## 4. Fase 3: El Auditor (Resultados del Test Harness)
 
-*Pruebas ejecutadas:* Saltos adelante y atrás estructurados
+*Pruebas ejecutadas:* Expresiones anidadas con paréntesis
 
 Ambas implementaciones se compilaron con MSVC en modo C11 y las opciones `/W4 /WX`. Las dos superaron los seis casos del harness original y terminaron con código de salida cero.
 
-También se ejecutaron pruebas complementarias de generación consecutiva de `L9` y `L10`, actualización del contador, modo de salto negativo, etiqueta NULL en modo marca, etiquetas vacías, buffers pequeños, capacidades cero, uno y negativa, destino NULL, contador NULL, contador negativo y contador igual a `INT_MAX`.
+También se ejecutaron pruebas complementarias de cantidad de líneas devueltas, capacidad exacta, capacidad insuficiente, max cero, raíz NULL, salida NULL, max negativo y operador con un hijo ausente. Un centinela confirmó que se conservó una fila situada fuera de la capacidad permitida.
 
-Una prueba con centinela comprobó que la escritura truncada conservó un byte situado fuera de la capacidad declarada. Todas las comprobaciones terminaron correctamente.
+Además, se tradujo una cadena con 64 operadores y se comprobó su última instrucción `_t63 = _t62 + b`. Un árbol con 65 operadores devolvió `-1`. Una llamada posterior confirmó que la numeración vuelve a `_t0`. Todas estas pruebas terminaron correctamente.
 
-Queda pendiente repetir la compilación y ejecución con GCC y verificar exhaustivamente las capacidades próximas a la longitud completa de cada salida. Las pruebas realizadas comprueban el texto generado; la resolución y ejecución de destinos pertenecen a etapas posteriores.
+Queda pendiente repetir la compilación y ejecución con GCC y ampliar las pruebas de árboles inválidos y valores de hoja próximos al límite de su almacenamiento.
 
 ### Salida del harness
 
 Salida obtenida en ambas implementaciones, presentada hasta el total. El programa imprime después su mensaje de cierre.
 
 ```text
-=== AUDITORIA SESION 23 - Etiquetas y saltos incondicionales ===
+=== AUDITORIA SESION 22 - Traductor de AST a TAC con precedencia ===
 Caso                               esperado:              obtenido:              resultado
-[ 1] nueva_etiqueta(L0)                 esperado: L0           obtenido: L0           OK
-[ 2] nueva_etiqueta(L5)                 esperado: L5           obtenido: L5           OK
-[ 3] emitir_flujo(GOTO L2)              esperado: GOTO L2      obtenido: GOTO L2      OK
-[ 4] emitir_flujo(marca L2)             esperado: L2:          obtenido: L2:          OK
-[ 5] emitir_flujo(NULL)                 esperado:              obtenido:              OK
-[ 6] nueva_etiqueta(L10)                esperado: L10          obtenido: L10          OK
+[ 1] a + b * c                          esperado: _t0 = b * c  obtenido: _t0 = b * c  OK
+[ 2] a + b * c (2a linea)
+     esperado: _t1 = a + _t0
+     obtenido: _t1 = a + _t0
+     -> OK
+[ 3] (a + b) * c
+     esperado: _t1 = _t0 * c
+     obtenido: _t1 = _t0 * c
+     -> OK
+[ 4] x * (y - z) + w
+     esperado: _t2 = _t1 + w
+     obtenido: _t2 = _t1 + w
+     -> OK
+[ 5] hoja sin operaciones               esperado: 0            obtenido: 0            OK
+[ 6] (a + b) * (c - d)
+     esperado: _t2 = _t0 * _t1
+     obtenido: _t2 = _t0 * _t1
+     -> OK
 
 RESULTADO: 6/6 pruebas superadas
 ```
 
 * [x] Caso base y límites superados sin *Crash* en las pruebas ejecutadas.
-* [x] La revisión confirma escritura acotada a cap y ausencia de reservas dinámicas. La prueba con centinela confirmó la conservación del byte externo a la capacidad declarada.
+* [x] La revisión confirma controles de capacidad para líneas, pila y Pool, además de escritura acotada mediante snprintf. Ambas versiones carecen de reservas dinámicas de memoria.
 * [x] La complejidad teórica coincide con la implementada.
 
 ### Reporte Crítico
 
 *¿Qué caso borde o problema omitió la IA y cómo lo solucionaste?*
 
-> El harness original utiliza `es_salto` con valores cero y uno, pero el contrato establece que cualquier valor distinto de cero debe producir GOTO. Una implementación que compruebe únicamente `es_salto == 1` podría superar esos casos y fallar con valores negativos. Se agregó una prueba con `es_salto = -3`, y ambas versiones produjeron `GOTO L2`.
+> El harness original utiliza árboles pequeños y buffers suficientes, por lo que deja sin evaluar el agotamiento del Pool. La función proporcionada devuelve `"_t?"` después de 64 temporales, lo que permitiría generar instrucciones con nombres repetidos si se continuara traduciendo. Ambas implementaciones comprueban la capacidad antes de solicitar un temporal y devuelven `-1` al excederla.
 >
-> También se comprobó el incremento del contador mediante dos llamadas consecutivas iniciadas en nueve. Se obtuvieron `L9` y `L10`, con valores finales del contador diez y once respectivamente.
+> Se verificó una cadena de 64 operadores, cuya última instrucción utiliza `_t63`, y después otra de 65 operadores, que fue rechazada. También se comprobó que una capacidad de una línea conserve intacta la fila siguiente cuando el árbol requiere dos instrucciones.
 >
-> La versión de IA entregada ya contempla estas condiciones. La auditoría amplió la cobertura del harness sin requerir una corrección del código.
+> La versión de IA entregada ya incluye estas protecciones. Las pruebas complementarias ampliaron la cobertura del harness. Cuando se devuelve `-1`, el prefijo emitido puede permanecer en el buffer y debe descartarse.
 
 ---
 
