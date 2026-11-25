@@ -1,7 +1,7 @@
-# Bitácora de Requerimientos y Auditoría IA — Sesión 21
+# Bitácora de Requerimientos y Auditoría IA — Sesión 23
 
 **Materia:** Lenguajes y Autómatas II (SCD-1016)  
-**Tema:** Fundamentos de Código de 3 Direcciones  
+**Tema:** Etiquetas y Saltos Incondicionales  
 **Docente Titular:** MCC. Iván Márquez Larios (`ijmarquezl`)  
 **Estudiante:** Jesus Manuel Rangel Aviles  
 **Matrícula:** 24531356  
@@ -11,25 +11,27 @@
 
 ## 1. Fase 1: El Artesano (Dificultad Manual)
 
-*Reto:* Representación en Cuádruplos (op,a,b,r)  
+*Reto:* Generador de etiquetas e instrucciones goto  
 *Describe qué problema o restricción de memoria/sintaxis identificaste al codificar a mano:*
 
-> La dificultad técnica consiste en generar el temporal con el valor actual del contador y después incrementarlo. Si el incremento se realiza primero, la secuencia iniciada en cero comienza incorrectamente con `_t1`. También hay que conservar exactamente los paréntesis, comas y espacios del cuádruplo.
+> La dificultad técnica consiste en utilizar el valor actual del contador antes de incrementarlo para producir etiquetas consecutivas. También hay que distinguir entre la instrucción `GOTO L2` y la marca `L2:`, conservando el mismo nombre de destino.
 >
-> La restricción de memoria principal es respetar la capacidad del buffer, incluyendo el terminador nulo. Los campos NULL deben convertirse en `"_"` antes de utilizarlos como cadenas.
+> La restricción de memoria principal es reservar espacio para el terminador nulo dentro de la capacidad del buffer. Además, una etiqueta NULL debe producir una cadena vacía y el modo de salto debe aceptar cualquier valor distinto de cero, incluyendo valores negativos.
 
-Implementación de referencia asistida por IA para `artesano_sesion21_c.c`. Utiliza `snprintf` para limitar la escritura al buffer recibido.
+Implementación de referencia asistida por IA para `artesano_sesion23_c.c`. Utiliza `snprintf` para generar las etiquetas y formatear el flujo.
 
-Para los casos que el laboratorio deja sin definir, se adoptan estas decisiones. Un destino NULL o una capacidad no positiva producen una salida inmediata y conservan el contador. Un contador NULL, negativo o igual a `INT_MAX` deja una cadena vacía en un destino válido. Esto evita desbordar el contador. Si el buffer es pequeño, se guarda un prefijo terminado en nulo y el contador válido se incrementa.
+Para los casos que el laboratorio deja sin definir, ambas versiones adoptan las siguientes decisiones. Un destino NULL o una capacidad no positiva producen una salida inmediata y conservan el contador. Un contador NULL, negativo o igual a `INT_MAX` deja una cadena vacía en un destino válido. El límite superior se rechaza para evitar desbordar el incremento.
 
-El llamador debe proporcionar un buffer de al menos `cap` bytes. Las cadenas de entrada y el contador deben ocupar almacenamiento independiente del destino. Para obtener temporales completos y únicos, el buffer debe tener capacidad suficiente.
+Cuando el buffer es insuficiente se conserva un prefijo terminado en nulo y el contador válido se incrementa. La unicidad de las etiquetas completas requiere capacidad suficiente y conservar el mismo contador durante la secuencia.
+
+El llamador debe proporcionar al menos `cap` bytes accesibles. La etiqueta de entrada y el contador deben ocupar almacenamiento independiente del destino.
 
 ```c
-#include "api_sesion21.h"
+#include "api_sesion23.h"
 #include <limits.h>
 #include <stdio.h>
 
-void nuevo_temporal(char *dst, int cap, int *contador) {
+void nueva_etiqueta(char *dst, int cap, int *contador) {
     if (dst == NULL || cap <= 0) return;
 
     dst[0] = '\0';
@@ -38,21 +40,23 @@ void nuevo_temporal(char *dst, int cap, int *contador) {
         return;
     }
 
-    snprintf(dst, (size_t)cap, "_t%d", *contador);
+    snprintf(dst, (size_t)cap, "L%d", *contador);
 
     ++*contador;
 }
 
-void emitir_cuadruplo(char *dst, int cap, const char *op,
-                     const char *a1, const char *a2, const char *res) {
+void emitir_flujo(char *dst, int cap, const char *etiqueta, int es_salto) {
     if (dst == NULL || cap <= 0) return;
 
-    if (op == NULL) op = "_";
-    if (a1 == NULL) a1 = "_";
-    if (a2 == NULL) a2 = "_";
-    if (res == NULL) res = "_";
+    dst[0] = '\0';
 
-    snprintf(dst, (size_t)cap, "(%s, %s, %s, %s)", op, a1, a2, res);
+    if (etiqueta == NULL) return;
+
+    if (es_salto != 0) {
+        snprintf(dst, (size_t)cap, "GOTO %s", etiqueta);
+    } else {
+        snprintf(dst, (size_t)cap, "%s:", etiqueta);
+    }
 }
 ```
 
@@ -66,49 +70,49 @@ void emitir_cuadruplo(char *dst, int cap, const char *op,
 | :--- | :--- |
 | **Contexto (C)** | C99 y bibliotecas estándar. El harness utiliza GCC con `-std=c11 -Wall -Wextra -Werror`. |
 | **Rol (R)** | Ingeniero de software de sistemas y compiladores. |
-| **Especificación (E)** | Generación de temporales únicos (_t0..) y cuádruplos con formato exacto. Convertir el contador a decimal manualmente y construir la salida mediante copia acotada. |
+| **Especificación (E)** | Trazabilidad del flujo de control. Generar etiquetas consecutivas y construir instrucciones GOTO o marcas mediante conversión decimal manual y copia acotada. |
 | **Output (O)** | Solo código modular y análisis de complejidad. |
 
 ### 2.2 Prompt Estructurado
 
 ```text
 Contexto:
-Implementa un módulo C que incluya api_sesion21.h.
+Implementa un módulo C que incluya api_sesion23.h.
 El harness utiliza -std=c11 -Wall -Wextra -Werror.
 El destino tiene al menos cap bytes accesibles.
-Las entradas y el contador ocupan almacenamiento independiente del destino.
+Las entradas y el contador son independientes del almacenamiento de dst.
 
 Rol:
 Actúa como ingeniero de software de sistemas y compiladores.
 
 Especificación:
 Conserva las firmas:
-void nuevo_temporal(char *dst, int cap, int *contador);
-void emitir_cuadruplo(char *dst, int cap, const char *op,
-                     const char *a1, const char *a2, const char *res);
+void nueva_etiqueta(char *dst, int cap, int *contador);
+void emitir_flujo(char *dst, int cap, const char *etiqueta, int es_salto);
 
-Implementa una función auxiliar de copia acotada que reserve
+Implementa una función auxiliar de copia acotada que conserve
 una posición para el terminador nulo.
 
-En nuevo_temporal, convierte manualmente el contador a decimal
-mediante divisiones y residuos. Escribe el prefijo _t, agrega los
-dígitos en orden y después incrementa el contador.
+En nueva_etiqueta, convierte manualmente el contador a decimal
+mediante divisiones y residuos. Escribe L seguido de los dígitos
+del valor actual y después incrementa el contador.
 
-En emitir_cuadruplo, construye el formato (op, a1, a2, res).
-Representa cada campo NULL como un guion bajo.
-Conserva las cadenas vacías como campos vacíos.
+En emitir_flujo:
+Si es_salto es distinto de cero, escribe "GOTO etiqueta".
+Si es_salto es cero, escribe "etiqueta:".
+Si etiqueta es NULL, produce una cadena vacía.
+Conserva las etiquetas vacías como cadenas válidas.
 
 Si dst es NULL o cap no es positivo, termina sin escribir.
-Con un destino válido, rechaza contador NULL, negativo o INT_MAX
-dejando una cadena vacía.
-Cuando el buffer es insuficiente, conserva un prefijo terminado
-en nulo. Incrementa el contador válido incluso si hubo truncamiento.
+Si el contador es NULL, negativo o INT_MAX, deja una cadena vacía
+en un destino válido y conserva el contador.
 
-Escribe el resultado en dst, utiliza únicamente almacenamiento
-automático local y evita variables globales y reservas dinámicas.
+Cuando el buffer sea insuficiente, escribe un prefijo terminado
+en nulo e incrementa el contador válido.
+Utiliza almacenamiento automático local y evita reservas dinámicas.
 
 Output:
-Entrega ia_sesion21_c.c sin main() y explica su complejidad.
+Entrega ia_sesion23_c.c sin main() y explica su complejidad.
 ```
 
 ---
@@ -116,7 +120,7 @@ Entrega ia_sesion21_c.c sin main() y explica su complejidad.
 ## 3. Código Devuelto por el Modelo
 
 ```c
-#include "api_sesion21.h"
+#include "api_sesion23.h"
 #include <limits.h>
 #include <stddef.h>
 
@@ -130,7 +134,7 @@ static void agregar(char *dst, int cap, int *usados, const char *texto) {
     dst[*usados] = '\0';
 }
 
-void nuevo_temporal(char *dst, int cap, int *contador) {
+void nueva_etiqueta(char *dst, int cap, int *contador) {
     if (dst == NULL || cap <= 0) return;
 
     dst[0] = '\0';
@@ -140,8 +144,8 @@ void nuevo_temporal(char *dst, int cap, int *contador) {
     }
 
     char digitos[sizeof(int) * CHAR_BIT + 1];
-    int cantidad = 0;
     unsigned int valor = (unsigned int)*contador;
+    int cantidad = 0;
 
     do {
         digitos[cantidad++] = (char)('0' + valor % 10);
@@ -150,7 +154,7 @@ void nuevo_temporal(char *dst, int cap, int *contador) {
 
     int usados = 0;
 
-    agregar(dst, cap, &usados, "_t");
+    agregar(dst, cap, &usados, "L");
 
     while (cantidad > 0) {
         char caracter[2] = {digitos[--cantidad], '\0'};
@@ -160,94 +164,79 @@ void nuevo_temporal(char *dst, int cap, int *contador) {
     ++*contador;
 }
 
-void emitir_cuadruplo(char *dst, int cap, const char *op,
-                     const char *a1, const char *a2, const char *res) {
+void emitir_flujo(char *dst, int cap, const char *etiqueta, int es_salto) {
     if (dst == NULL || cap <= 0) return;
-
-    const char *campos[] = {op, a1, a2, res};
-    int usados = 0;
 
     dst[0] = '\0';
 
-    agregar(dst, cap, &usados, "(");
+    if (etiqueta == NULL) return;
 
-    for (int i = 0; i < 4; ++i) {
-        if (i > 0) {
-            agregar(dst, cap, &usados, ", ");
-        }
+    int usados = 0;
 
-        const char *texto = campos[i];
-
-        if (texto == NULL) {
-            texto = "_";
-        }
-
-        agregar(dst, cap, &usados, texto);
+    if (es_salto != 0) {
+        agregar(dst, cap, &usados, "GOTO ");
     }
 
-    agregar(dst, cap, &usados, ")");
+    agregar(dst, cap, &usados, etiqueta);
+
+    if (es_salto == 0) {
+        agregar(dst, cap, &usados, ":");
+    }
 }
 ```
 
-Sea `d` la cantidad de dígitos del contador y `L` la longitud total del cuádruplo completo.
+Sea `d` la cantidad de dígitos del contador y `L` la longitud de la salida completa.
 
-`nuevo_temporal` tiene tiempo `O(d)` en ambas versiones. Como el contador es int, la cantidad de dígitos está acotada para una plataforma determinada.
+`nueva_etiqueta` tiene tiempo `O(d)` en ambas implementaciones. Para una plataforma con int de tamaño fijo, la cantidad máxima de dígitos está acotada.
 
-`emitir_cuadruplo` tiene tiempo `O(L)` en la versión Artesano, considerando el procesamiento de las cadenas por `snprintf`. La versión de IA copia como máximo `cap - 1` caracteres, con tiempo `O(min(L, cap))`.
+`emitir_flujo` tiene tiempo `O(L)` en Artesano, considerando el procesamiento de la cadena mediante `snprintf`. La versión de IA realiza copia acotada, con tiempo `O(min(L, cap))`.
 
-Ambas implementaciones utilizan espacio auxiliar `O(1)` para los tipos de la plataforma. La versión de IA utiliza un arreglo local de tamaño fijo para invertir los dígitos.
+Ambas versiones utilizan espacio auxiliar `O(1)` para los tipos de la plataforma. El arreglo local de dígitos tiene un tamaño fijo suficiente para representar el contador.
 
 ---
 
 ## 4. Fase 3: El Auditor (Resultados del Test Harness)
 
-*Pruebas ejecutadas:* Expresiones aritméticas compuestas
+*Pruebas ejecutadas:* Saltos adelante y atrás estructurados
 
 Ambas implementaciones se compilaron con MSVC en modo C11 y las opciones `/W4 /WX`. Las dos superaron los seis casos del harness original y terminaron con código de salida cero.
 
-También se ejecutaron pruebas complementarias del cambio de `_t9` a `_t10`, actualización del contador, cuatro campos NULL, campos vacíos, buffers pequeños, capacidades cero y uno, destino NULL, contador NULL, contador negativo y contador igual a `INT_MAX`. Se comprobó además un byte centinela fuera de la capacidad declarada del buffer. Todas estas pruebas terminaron correctamente.
+También se ejecutaron pruebas complementarias de generación consecutiva de `L9` y `L10`, actualización del contador, modo de salto negativo, etiqueta NULL en modo marca, etiquetas vacías, buffers pequeños, capacidades cero, uno y negativa, destino NULL, contador NULL, contador negativo y contador igual a `INT_MAX`.
 
-Queda pendiente repetir la compilación y ejecución con GCC en el entorno del laboratorio y comprobar exhaustivamente las capacidades próximas a cada longitud de salida.
+Una prueba con centinela comprobó que la escritura truncada conservó un byte situado fuera de la capacidad declarada. Todas las comprobaciones terminaron correctamente.
+
+Queda pendiente repetir la compilación y ejecución con GCC y verificar exhaustivamente las capacidades próximas a la longitud completa de cada salida. Las pruebas realizadas comprueban el texto generado; la resolución y ejecución de destinos pertenecen a etapas posteriores.
 
 ### Salida del harness
 
 Salida obtenida en ambas implementaciones, presentada hasta el total. El programa imprime después su mensaje de cierre.
 
 ```text
-=== AUDITORIA SESION 21 - Cuadruplos y temporales unicos ===
+=== AUDITORIA SESION 23 - Etiquetas y saltos incondicionales ===
 Caso                               esperado:              obtenido:              resultado
-[ 1] nuevo_temporal(_t0)                esperado: _t0          obtenido: _t0          OK
-[ 2] nuevo_temporal(_t7)                esperado: _t7          obtenido: _t7          OK
-[ 3] cuadruplo de a + b
-     esperado: (+, a, b, _t0)
-     obtenido: (+, a, b, _t0)
-     -> OK
-[ 4] cuadruplo de _t0 * c
-     esperado: (*, _t0, c, _t1)
-     obtenido: (*, _t0, c, _t1)
-     -> OK
-[ 5] asignacion simple                  esperado: (=, a, _, x) obtenido: (=, a, _, x) OK
-[ 6] goto sin operandos
-     esperado: (goto, L1, _, _)
-     obtenido: (goto, L1, _, _)
-     -> OK
+[ 1] nueva_etiqueta(L0)                 esperado: L0           obtenido: L0           OK
+[ 2] nueva_etiqueta(L5)                 esperado: L5           obtenido: L5           OK
+[ 3] emitir_flujo(GOTO L2)              esperado: GOTO L2      obtenido: GOTO L2      OK
+[ 4] emitir_flujo(marca L2)             esperado: L2:          obtenido: L2:          OK
+[ 5] emitir_flujo(NULL)                 esperado:              obtenido:              OK
+[ 6] nueva_etiqueta(L10)                esperado: L10          obtenido: L10          OK
 
 RESULTADO: 6/6 pruebas superadas
 ```
 
 * [x] Caso base y límites superados sin *Crash* en las pruebas ejecutadas.
-* [x] La revisión confirma escrituras acotadas a cap y ausencia de reservas dinámicas. La prueba con centinela confirmó la conservación del byte situado fuera de la capacidad declarada.
+* [x] La revisión confirma escritura acotada a cap y ausencia de reservas dinámicas. La prueba con centinela confirmó la conservación del byte externo a la capacidad declarada.
 * [x] La complejidad teórica coincide con la implementada.
 
 ### Reporte Crítico
 
 *¿Qué caso borde o problema omitió la IA y cómo lo solucionaste?*
 
-> El harness original verifica los textos `_t0` y `_t7`, pero deja sin comprobar el incremento del contador. Una implementación que formatee correctamente y conserve el contador podría superar esos dos casos y generar nombres repetidos en llamadas consecutivas. Se agregó una prueba iniciada en nueve que confirmó `_t9`, contador diez, y después `_t10`, contador once.
+> El harness original utiliza `es_salto` con valores cero y uno, pero el contrato establece que cualquier valor distinto de cero debe producir GOTO. Una implementación que compruebe únicamente `es_salto == 1` podría superar esos casos y fallar con valores negativos. Se agregó una prueba con `es_salto = -3`, y ambas versiones produjeron `GOTO L2`.
 >
-> También se comprobaron buffers insuficientes. Las dos versiones conservaron un prefijo terminado en nulo sin modificar el centinela externo. El truncamiento puede hacer que distintos temporales produzcan el mismo prefijo, por lo que la unicidad del nombre completo requiere capacidad suficiente.
+> También se comprobó el incremento del contador mediante dos llamadas consecutivas iniciadas en nueve. Se obtuvieron `L9` y `L10`, con valores finales del contador diez y once respectivamente.
 >
-> La versión de IA entregada ya contempla el incremento y los límites de escritura. La auditoría amplió la cobertura del harness sin requerir una corrección del código.
+> La versión de IA entregada ya contempla estas condiciones. La auditoría amplió la cobertura del harness sin requerir una corrección del código.
 
 ---
 
