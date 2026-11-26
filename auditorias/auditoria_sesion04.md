@@ -191,7 +191,7 @@ El principal caso borde que se debía considerar era evaluar un árbol vacío re
 
 ---
 
-**Firma digital:** [Usuario de GitHub]
+**Firma digital:** `j3sus55`
 
 ---
 

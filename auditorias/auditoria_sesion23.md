@@ -240,4 +240,4 @@ RESULTADO: 6/6 pruebas superadas
 
 ---
 
-**Firma digital:** [mi usuario de GitHub]
+**Firma digital:** `j3sus55`

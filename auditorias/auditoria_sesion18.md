@@ -1,5 +1,8 @@
 # Bitácora de Requerimientos y Auditoría IA — Sesión 18
 
+**Estudiante:** Jesus Manuel Rangel Aviles  
+**Matrícula:** 24531356  
+
 **Tema:** Arreglos y Verificación de Límites Estáticos
 
 La función toma los anchos de una tabla, rechaza tipos desconocidos y dimensiones negativas, y comprueba que el producto quepa en `long` antes de multiplicar. Un índice es válido si es mayor o igual a cero y menor que el número de elementos.
@@ -25,3 +28,6 @@ Caso                               esperado:              obtenido:             
 RESULTADO: 6/6 pruebas superadas
 TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion18.md
 ```
+
+---
+**Firma digital:** `j3sus55`

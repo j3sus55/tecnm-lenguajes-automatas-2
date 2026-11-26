@@ -1,5 +1,8 @@
 # Auditoría de la sesión 02
 
+**Estudiante:** Jesus Manuel Rangel Aviles  
+**Matrícula:** 24531356  
+
 Cada nodo almacena hasta 15 caracteres más el terminador. La inserción conserva el orden y la liberación guarda el enlace siguiente antes de llamar a `free`. El harness comprueba el contrato funcional. La ejecución no incluye un detector de fugas.
 
 La implementación de esta revisión se preparó con asistencia de IA. La ejecución de abajo verifica ese código.
@@ -45,3 +48,6 @@ Caso                               esperado:              obtenido:             
 RESULTADO: 6/6 pruebas superadas
 TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion02.md
 ```
+
+---
+**Firma digital:** `j3sus55`

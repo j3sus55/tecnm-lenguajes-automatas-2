@@ -1,5 +1,8 @@
 # Auditoría de la sesión 01
 
+**Estudiante:** Jesus Manuel Rangel Aviles  
+**Matrícula:** 24531356  
+
 La función `invertir` modifica el búfer en el sitio, conserva el terminador y admite `NULL`. Usa tiempo O(n) y memoria auxiliar O(1).
 
 La implementación de esta revisión se preparó con asistencia de IA. La ejecución de abajo verifica ese código.
@@ -45,3 +48,6 @@ Caso                               esperado:              obtenido:             
 RESULTADO: 6/6 pruebas superadas
 TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion01.md
 ```
+
+---
+**Firma digital:** `j3sus55`

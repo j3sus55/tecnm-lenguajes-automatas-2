@@ -176,7 +176,7 @@ El principal caso borde que debía considerarse era un archivo cuya última lín
 
 ---
 
-**Firma digital:** [Usuario de GitHub]
+**Firma digital:** `j3sus55`
 
 ---
 

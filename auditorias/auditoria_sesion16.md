@@ -1,5 +1,8 @@
 # Bitácora de Requerimientos y Auditoría IA — Sesión 16
 
+**Estudiante:** Jesus Manuel Rangel Aviles  
+**Matrícula:** 24531356  
+
 **Tema:** Firmas de Función y Parámetros Formales
 
 La función recorre el catálogo y compara el nombre con `strcmp`. Devuelve `1` si coincide la aridad, `0` si difiere y `-1` si no hay un nombre válido registrado. La búsqueda usa espacio auxiliar constante.
@@ -25,3 +28,6 @@ Caso                               esperado:              obtenido:             
 RESULTADO: 6/6 pruebas superadas
 TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion16.md
 ```
+
+---
+**Firma digital:** `j3sus55`

@@ -11,7 +11,52 @@
 ## 1. Fase 1: El Artesano (Dificultad Manual)
 *Reto:* Tabla Hash con encadenamiento  
 *Describe qué problema o restricción de memoria/sintaxis identificaste al codificar a mano:*
-> Para conservar la cadena cuando dos nombres caen en la misma cubeta, primero se asigna la cabecera anterior a `nuevo->sig` y después se actualiza `tabla[indice]`. Además, el campo `nombre[16]` admite hasta 15 bytes de texto porque hay que reservar un byte para `'\0'`. La solución de referencia de El Artesano se preparó con ayuda de IA. El código de la sección 3 se probó como `artesano_sesion11_c.c` y pasó las seis pruebas.
+> Esta implementación de referencia asistida por IA busca duplicados en todas las cubetas y enlaza el símbolo al final de su cadena. La versión Científico busca los duplicados de la misma forma y enlaza el símbolo al principio de su cadena.
+
+```c
+#include "api_sesion11.h"
+#include <stdlib.h>
+#include <string.h>
+
+unsigned int hash_djb2(const char *clave) {
+    unsigned int hash = 5381u;
+    if (clave != NULL) {
+        for (; *clave != '\0'; ++clave) {
+            hash = (hash << 5) + hash + (unsigned char)*clave;
+        }
+    }
+    return hash;
+}
+
+int insertar_simbolo(Simbolo *tabla[], unsigned int cubetas,
+                     const char *nombre, int tipo, int offset) {
+    if (tabla == NULL || cubetas == 0 || nombre == NULL) return -1;
+
+    Simbolo datos = {0};
+    size_t longitud = strlen(nombre);
+    if (longitud >= sizeof datos.nombre) return -1;
+
+    unsigned int indice = hash_djb2(nombre) % cubetas;
+    Simbolo **destino = &tabla[indice];
+    for (unsigned int i = 0; i < cubetas; ++i) {
+        Simbolo **enlace = &tabla[i];
+        while (*enlace != NULL) {
+            if (strcmp((*enlace)->nombre, nombre) == 0) return 0;
+            enlace = &(*enlace)->sig;
+        }
+        if (i == indice) destino = enlace;
+    }
+
+    Simbolo *nuevo = malloc(sizeof *nuevo);
+    if (nuevo == NULL) return -1;
+    memcpy(datos.nombre, nombre, longitud + 1);
+    datos.tipo = tipo;
+    datos.offset = offset;
+    *nuevo = datos;
+    *destino = nuevo;
+    return 1;
+}
+```
 
 ---
 
@@ -31,8 +76,8 @@ Contexto: laboratorio de C11 sobre una tabla de símbolos definida en api_sesion
 Rol: ingeniero de software de sistemas y compiladores.
 Especificación: conserva las firmas de hash_djb2 e insertar_simbolo.
 Inicializa djb2 en 5381 y aplica hash = hash * 33 + byte por cada byte.
-Calcula la cubeta con hash % cubetas y recorre su cadena para detectar
-duplicados antes de reservar memoria. Conserva el tipo y el offset del
+Calcula la cubeta con hash % cubetas y revisa todas las cadenas para
+detectar duplicados antes de reservar memoria. Conserva el tipo y el offset del
 símbolo existente si el nombre se repite. Enlaza cada símbolo nuevo con
 la cadena anterior. Devuelve 1 al insertar, 0 ante un duplicado y -1 con
 tabla nula, nombre nulo, cero cubetas, nombre que no cabe o fallo de malloc.
@@ -72,10 +117,9 @@ int insertar_simbolo(Simbolo *tabla[], unsigned int cubetas,
     }
 
     unsigned int indice = hash_djb2(nombre) % cubetas;
-    for (const Simbolo *actual = tabla[indice]; actual != NULL;
-         actual = actual->sig) {
-        if (strcmp(actual->nombre, nombre) == 0) {
-            return 0;
+    for (unsigned int i = 0; i < cubetas; ++i) {
+        for (const Simbolo *actual = tabla[i]; actual != NULL; actual = actual->sig) {
+            if (strcmp(actual->nombre, nombre) == 0) return 0;
         }
     }
 
@@ -96,7 +140,7 @@ int insertar_simbolo(Simbolo *tabla[], unsigned int cubetas,
 ---
 
 ## 4. Fase 3: El Auditor (Resultados del Test Harness)
-*Pruebas ejecutadas:* Manejo de claves duplicadas y colisiones, hash de la clave vacía y de `abc`, conservación del offset y rechazo de una tabla nula. El harness original se compiló con MSVC en modo C11 (`/W4 /WX`). El Artesano y El Científico usaron la misma implementación de referencia, se compilaron por separado y dieron la misma salida.
+*Pruebas ejecutadas:* Manejo de claves duplicadas y colisiones, hash de la clave vacía y de `abc`, conservación del offset y rechazo de una tabla nula. El harness original se compiló con MSVC en modo C11 (`/W4 /WX`). Se compilaron dos implementaciones distintas por separado. Ambas pasaron 6 de 6 y produjeron la salida de abajo.
 
 ### Salida del harness
 ```text
@@ -115,7 +159,7 @@ TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion11.md
 
 * [x] Caso base y límites superados sin *Crash*.
 * [ ] No existen accesos fuera de límites ni *Memory Leaks*. El harness original deja nodos sin liberar y no se ejecutó un analizador de memoria.
-* [x] La complejidad teórica coincide con la implementada. El costo es `O(L + k)`, donde `L` es la longitud del nombre recibido y `k` es la cantidad de nodos en la cubeta. Con una buena distribución y carga acotada, el recorrido de la cadena cuesta `O(1)` en promedio.
+* [x] La complejidad teórica coincide con la implementada. El costo es `O(L + B + N)`, donde `L` es la longitud del nombre, `B` es el número de cubetas y `N` el número total de símbolos. El espacio auxiliar es constante, aparte del nodo que se inserta.
 
 ### Reporte Crítico
 *¿Qué caso borde o problema omitió la IA y cómo lo solucionaste?*
