@@ -193,3 +193,45 @@ Para probar la versión de IA, guarda el mismo código en `ia_sesion03_c.c` y ej
 ```bash
 !gcc -std=c11 -Wall -Wextra -Werror harness_sesion03_c.c ia_sesion03_c.c -o test_ia && ./test_ia
 ```
+
+## Ejecución del harness oficial
+
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores.
+
+[Versión IA](../laboratorios/sesion03/ia_sesion03_c.c) · [Harness oficial](../laboratorios/sesion03/harness_sesion03_c.c)
+
+### Versión IA
+
+```text
+=== AUDITORIA SESION 03 - Archivos: escribir y contar lineas ===
+Caso                               esperado:              obtenido:              resultado
+[ 1] escribir_texto(...)==0             esperado: 0            obtenido: 0            OK
+[ 2] contar_lineas(3 lineas)            esperado: 3            obtenido: 3            OK
+[ 3] contar_lineas(sin salto final)     esperado: 2            obtenido: 2            OK
+[ 4] contar_lineas(archivo vacio)       esperado: 0            obtenido: 0            OK
+[ 5] contar_lineas(inexistente)         esperado: -1           obtenido: -1           OK
+[ 6] escribir_texto(ruta invalida)      esperado: -1           obtenido: -1           OK
+
+RESULTADO: 6/6 pruebas superadas
+TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion03.md
+```
+
+### Archivo Artesano preparado con IA
+
+Esta segunda implementación se preparó con asistencia de IA. La salida se capturó con el harness oficial y MSVC en modo C11, con advertencias tratadas como errores.
+
+[Código de la segunda implementación](../laboratorios/sesion03/artesano_sesion03_c.c)
+
+```text
+=== AUDITORIA SESION 03 - Archivos: escribir y contar lineas ===
+Caso                               esperado:              obtenido:              resultado
+[ 1] escribir_texto(...)==0             esperado: 0            obtenido: 0            OK
+[ 2] contar_lineas(3 lineas)            esperado: 3            obtenido: 3            OK
+[ 3] contar_lineas(sin salto final)     esperado: 2            obtenido: 2            OK
+[ 4] contar_lineas(archivo vacio)       esperado: 0            obtenido: 0            OK
+[ 5] contar_lineas(inexistente)         esperado: -1           obtenido: -1           OK
+[ 6] escribir_texto(ruta invalida)      esperado: -1           obtenido: -1           OK
+
+RESULTADO: 6/6 pruebas superadas
+TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion03.md
+```

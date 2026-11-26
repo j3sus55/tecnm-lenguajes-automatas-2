@@ -48,11 +48,11 @@ Output: Código fuente en C puro compatible con los tipos de datos NODO_NUM y NO
 #include <string.h>
 
 static void append_token(char *buf, int cap, const char *token) {
-    int current_len = strlen(buf);
-    int token_len = strlen(token);
-    int needed = current_len + token_len + (current_len > 0 ? 1 : 0);
+    size_t current_len = strlen(buf);
+    size_t token_len = strlen(token);
+    size_t needed = current_len + token_len + (current_len > 0 ? 1 : 0);
     
-    if (needed >= cap) return;
+    if (needed >= (size_t)cap) return;
     
     if (current_len > 0) {
         buf[current_len] = ' ';
@@ -238,3 +238,49 @@ int main(void) {
     printf("TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion05.md\n");
     return 0;
 }
+
+## Ejecución del harness oficial
+
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores.
+
+[Versión IA](../laboratorios/sesion05/ia_sesion05_c.c) · [Harness oficial](../laboratorios/sesion05/harness_sesion05_c.c)
+
+### Versión IA
+
+```text
+=== AUDITORIA SESION 05 - Recorrido postorden y RPN ===
+Caso                               esperado:              obtenido:              resultado
+[ 1] hoja 42                            esperado: 42           obtenido: 42           OK
+[ 2] 3+(5*2)                            esperado: 3 5 2 * +    obtenido: 3 5 2 * +    OK
+[ 3] arbol NULL                         esperado:              obtenido:              OK
+[ 4] (1+2)*(3+4)
+     esperado: 1 2 + 3 4 + *
+     obtenido: 1 2 + 3 4 + *
+     -> OK
+[ 5] 8-3                                esperado: 8 3 -        obtenido: 8 3 -        OK
+
+RESULTADO: 5/5 pruebas superadas
+TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion05.md
+```
+
+### Archivo Artesano preparado con IA
+
+Esta segunda implementación se preparó con asistencia de IA. La salida se capturó con el harness oficial y MSVC en modo C11, con advertencias tratadas como errores.
+
+[Código de la segunda implementación](../laboratorios/sesion05/artesano_sesion05_c.c)
+
+```text
+=== AUDITORIA SESION 05 - Recorrido postorden y RPN ===
+Caso                               esperado:              obtenido:              resultado
+[ 1] hoja 42                            esperado: 42           obtenido: 42           OK
+[ 2] 3+(5*2)                            esperado: 3 5 2 * +    obtenido: 3 5 2 * +    OK
+[ 3] arbol NULL                         esperado:              obtenido:              OK
+[ 4] (1+2)*(3+4)
+     esperado: 1 2 + 3 4 + *
+     obtenido: 1 2 + 3 4 + *
+     -> OK
+[ 5] 8-3                                esperado: 8 3 -        obtenido: 8 3 -        OK
+
+RESULTADO: 5/5 pruebas superadas
+TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion05.md
+```

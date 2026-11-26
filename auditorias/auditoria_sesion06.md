@@ -161,3 +161,41 @@ RESULTADO: 6/6 pruebas superadas
 ---
 
 **Firma digital:** [Usuario de GitHub]
+
+## Ejecución del harness oficial
+
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores.
+
+[Archivo Artesano](../laboratorios/sesion06/artesano_sesion06_c.c) · [Versión IA](../laboratorios/sesion06/ia_sesion06_c.c) · [Harness oficial](../laboratorios/sesion06/harness_sesion06_c.c)
+
+### Archivo Artesano
+
+```text
+=== AUDITORIA SESION 06 - Tabla de compatibilidad de tipos ===
+Caso                               esperado:              obtenido:              resultado
+[ 1] compatible(INT,INT)                esperado: 1            obtenido: 1            OK
+[ 2] compatible(FLOAT,INT)              esperado: 1            obtenido: 1            OK
+[ 3] compatible(INT,FLOAT)              esperado: 0            obtenido: 0            OK
+[ 4] compatible(INT,ERROR)              esperado: 0            obtenido: 0            OK
+[ 5] nombre_tipo(INT)                   esperado: int          obtenido: int          OK
+[ 6] nombre_tipo(ERROR)                 esperado: error        obtenido: error        OK
+
+RESULTADO: 6/6 pruebas superadas
+TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion06.md
+```
+
+### Versión IA
+
+```text
+=== AUDITORIA SESION 06 - Tabla de compatibilidad de tipos ===
+Caso                               esperado:              obtenido:              resultado
+[ 1] compatible(INT,INT)                esperado: 1            obtenido: 1            OK
+[ 2] compatible(FLOAT,INT)              esperado: 1            obtenido: 1            OK
+[ 3] compatible(INT,FLOAT)              esperado: 0            obtenido: 0            OK
+[ 4] compatible(INT,ERROR)              esperado: 0            obtenido: 0            OK
+[ 5] nombre_tipo(INT)                   esperado: int          obtenido: int          OK
+[ 6] nombre_tipo(ERROR)                 esperado: error        obtenido: error        OK
+
+RESULTADO: 6/6 pruebas superadas
+TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion06.md
+```
