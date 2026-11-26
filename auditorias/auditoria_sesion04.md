@@ -211,9 +211,11 @@ Para probar la implementación de IA:
 
 ## Ejecución del harness oficial
 
-Salida capturada el 26 de noviembre de 2026 con MSVC en modo C11. Se probó la versión de IA que figura en esta bitácora. La versión Artesano queda pendiente de verificación.
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores. Se verificó la versión IA. La bitácora carece de una versión manual independiente.
 
-**Científico (IA)**
+[Versión IA](../laboratorios/sesion04/ia_sesion04_c.c) · [Harness oficial](../laboratorios/sesion04/harness_sesion04_c.c)
+
+### Versión IA
 
 ```text
 === AUDITORIA SESION 04 - Nodo binario de AST ===

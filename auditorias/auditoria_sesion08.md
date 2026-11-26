@@ -150,9 +150,11 @@ TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion08.md
 
 ## Ejecución del harness oficial
 
-Salida capturada el 26 de noviembre de 2026 con MSVC en modo C11.
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores.
 
-**Artesano**
+[Archivo Artesano](../laboratorios/sesion08/artesano_sesion08_c.c) · [Versión IA](../laboratorios/sesion08/ia_sesion08_c.c) · [Harness oficial](../laboratorios/sesion08/harness_sesion08_c.c)
+
+### Archivo Artesano
 
 ```text
 === AUDITORIA SESION 08 - Reglas de promocion y perdida ===
@@ -168,7 +170,7 @@ RESULTADO: 6/6 pruebas superadas
 TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion08.md
 ```
 
-**Científico (IA)**
+### Versión IA
 
 ```text
 === AUDITORIA SESION 08 - Reglas de promocion y perdida ===

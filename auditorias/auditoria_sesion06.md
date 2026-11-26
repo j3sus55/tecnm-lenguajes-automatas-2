@@ -164,9 +164,11 @@ RESULTADO: 6/6 pruebas superadas
 
 ## Ejecución del harness oficial
 
-Salida capturada el 26 de noviembre de 2026 con MSVC en modo C11.
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores.
 
-**Artesano**
+[Archivo Artesano](../laboratorios/sesion06/artesano_sesion06_c.c) · [Versión IA](../laboratorios/sesion06/ia_sesion06_c.c) · [Harness oficial](../laboratorios/sesion06/harness_sesion06_c.c)
+
+### Archivo Artesano
 
 ```text
 === AUDITORIA SESION 06 - Tabla de compatibilidad de tipos ===
@@ -182,7 +184,7 @@ RESULTADO: 6/6 pruebas superadas
 TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion06.md
 ```
 
-**Científico (IA)**
+### Versión IA
 
 ```text
 === AUDITORIA SESION 06 - Tabla de compatibilidad de tipos ===

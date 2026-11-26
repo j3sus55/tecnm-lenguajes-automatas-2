@@ -48,11 +48,11 @@ Output: Código fuente en C puro compatible con los tipos de datos NODO_NUM y NO
 #include <string.h>
 
 static void append_token(char *buf, int cap, const char *token) {
-    int current_len = strlen(buf);
-    int token_len = strlen(token);
-    int needed = current_len + token_len + (current_len > 0 ? 1 : 0);
+    size_t current_len = strlen(buf);
+    size_t token_len = strlen(token);
+    size_t needed = current_len + token_len + (current_len > 0 ? 1 : 0);
     
-    if (needed >= cap) return;
+    if (needed >= (size_t)cap) return;
     
     if (current_len > 0) {
         buf[current_len] = ' ';
@@ -241,9 +241,11 @@ int main(void) {
 
 ## Ejecución del harness oficial
 
-Salida capturada el 26 de noviembre de 2026 con MSVC en modo C11. Se probó la versión de IA que figura en esta bitácora. La versión Artesano queda pendiente de verificación. MSVC emitió dos advertencias C4267 por conversiones de `size_t` a `int`.
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores. Se verificó la versión IA. La bitácora carece de una versión manual independiente.
 
-**Científico (IA)**
+[Versión IA](../laboratorios/sesion05/ia_sesion05_c.c) · [Harness oficial](../laboratorios/sesion05/harness_sesion05_c.c)
+
+### Versión IA
 
 ```text
 === AUDITORIA SESION 05 - Recorrido postorden y RPN ===

@@ -196,9 +196,11 @@ Para probar la versión de IA, guarda el mismo código en `ia_sesion03_c.c` y ej
 
 ## Ejecución del harness oficial
 
-Salida capturada el 26 de noviembre de 2026 con MSVC en modo C11. Se probó la versión de IA que figura en esta bitácora. La versión Artesano queda pendiente de verificación.
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores. Se verificó la versión IA. La bitácora carece de una versión manual independiente.
 
-**Científico (IA)**
+[Versión IA](../laboratorios/sesion03/ia_sesion03_c.c) · [Harness oficial](../laboratorios/sesion03/harness_sesion03_c.c)
+
+### Versión IA
 
 ```text
 === AUDITORIA SESION 03 - Archivos: escribir y contar lineas ===
