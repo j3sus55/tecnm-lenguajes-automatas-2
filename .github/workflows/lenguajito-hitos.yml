@@ -1,4 +1,4 @@
-name: Lenguajito Jesus - Hitos 1 y 2
+name: Lenguajito - Hitos 1 y 2
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: lenguajito-jesus
+        working-directory: proyecto_integrador
     steps:
       - uses: actions/checkout@v4
       - name: Compilar Lenguajito
