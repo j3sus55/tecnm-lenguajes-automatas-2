@@ -241,11 +241,33 @@ int main(void) {
 
 ## Ejecución del harness oficial
 
-Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores. Se verificó la versión IA. La bitácora carece de una versión manual independiente.
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores.
 
 [Versión IA](../laboratorios/sesion05/ia_sesion05_c.c) · [Harness oficial](../laboratorios/sesion05/harness_sesion05_c.c)
 
 ### Versión IA
+
+```text
+=== AUDITORIA SESION 05 - Recorrido postorden y RPN ===
+Caso                               esperado:              obtenido:              resultado
+[ 1] hoja 42                            esperado: 42           obtenido: 42           OK
+[ 2] 3+(5*2)                            esperado: 3 5 2 * +    obtenido: 3 5 2 * +    OK
+[ 3] arbol NULL                         esperado:              obtenido:              OK
+[ 4] (1+2)*(3+4)
+     esperado: 1 2 + 3 4 + *
+     obtenido: 1 2 + 3 4 + *
+     -> OK
+[ 5] 8-3                                esperado: 8 3 -        obtenido: 8 3 -        OK
+
+RESULTADO: 5/5 pruebas superadas
+TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion05.md
+```
+
+### Archivo Artesano preparado con IA
+
+Esta segunda implementación se preparó con asistencia de IA. La salida se capturó con el harness oficial y MSVC en modo C11, con advertencias tratadas como errores.
+
+[Código de la segunda implementación](../laboratorios/sesion05/artesano_sesion05_c.c)
 
 ```text
 === AUDITORIA SESION 05 - Recorrido postorden y RPN ===

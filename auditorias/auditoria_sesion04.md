@@ -211,11 +211,31 @@ Para probar la implementación de IA:
 
 ## Ejecución del harness oficial
 
-Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores. Se verificó la versión IA. La bitácora carece de una versión manual independiente.
+Pruebas ejecutadas con MSVC en C11 el 26 de noviembre de 2026, con advertencias tratadas como errores.
 
 [Versión IA](../laboratorios/sesion04/ia_sesion04_c.c) · [Harness oficial](../laboratorios/sesion04/harness_sesion04_c.c)
 
 ### Versión IA
+
+```text
+=== AUDITORIA SESION 04 - Nodo binario de AST ===
+Caso                               esperado:              obtenido:              resultado
+[ 1] evaluar(nodo 42)                   esperado: 42           obtenido: 42           OK
+[ 2] evaluar(3+5*2)                     esperado: 13           obtenido: 13           OK
+[ 3] hijo izquierdo de (* 5 2)          esperado: 5            obtenido: 5            OK
+[ 4] operador guardado                  esperado: *            obtenido: *            OK
+[ 5] evaluar(NULL)                      esperado: -1           obtenido: -1           OK
+[ 6] evaluar(10-4)                      esperado: 6            obtenido: 6            OK
+
+RESULTADO: 6/6 pruebas superadas
+TODO EN VERDE. Documenta tu auditoria en auditorias/auditoria_sesion04.md
+```
+
+### Archivo Artesano preparado con IA
+
+Esta segunda implementación se preparó con asistencia de IA. La salida se capturó con el harness oficial y MSVC en modo C11, con advertencias tratadas como errores.
+
+[Código de la segunda implementación](../laboratorios/sesion04/artesano_sesion04_c.c)
 
 ```text
 === AUDITORIA SESION 04 - Nodo binario de AST ===
